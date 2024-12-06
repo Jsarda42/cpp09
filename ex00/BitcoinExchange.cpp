@@ -29,9 +29,16 @@ void BitcoinExchange::initData(void) {
 		std::istringstream ss(line);
 		if (std::getline(ss, date, ',') && std::getline(ss, value) ) {
 			try {
+				for (unsigned int i = 0; i < value.size();i++) {
+					if (value[i] != '.' && !std::isdigit(value[i])) {
+						std:: cout << value[i]<< std::endl;
+						std::cerr << "Wrong value: only numeric values are accepted ." << "\n";
+						return;
+					}
+				}
 				priceValue = std::atol(value.c_str());
 				if (priceValue < 0) {
-					std::cerr << "Wrong value: only numeric values are accepted and non-negative'." << "\n";
+					std::cerr << "Wrong value: only non-negative value accepted'." << "\n";
 					return;
 				}
 				parseDate(date);
