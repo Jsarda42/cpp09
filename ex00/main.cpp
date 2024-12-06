@@ -10,3 +10,6 @@ int main()
 	return 0;
 }
 
+// to get the closest date for the input from the data
+// use lower_bound
+

@@ -58,6 +58,10 @@ void BitcoinExchange::parseDate(std::string date) {
 	date_["month"] = date.substr(5, 2).c_str();
 	date_["day"] = date.substr(8, 2).c_str();
 
+	int year = std::atoi(date_["year"].c_str());
+	int month = std::atoi(date_["month"].c_str());
+	int day = std::atoi(date_["day"].c_str());
+
 	for (unsigned int i = 0; i < date_["year"].size(); i++) {
 		if (!std::isdigit(date_["year"][i]))
 			throw WrongDateFormatException("Invalid year format for '" + date + "'! Only numbers accepted");
@@ -68,47 +72,39 @@ void BitcoinExchange::parseDate(std::string date) {
 	}
 	for (unsigned int i = 0; i < date_["day"].size(); i++) {
 		if (!std::isdigit(date_["day"][i]))
-			throw WrongDateFormatException("Invalid day format for '" + date + "'! Only numbers accepted");
+			throw WrongDateFormatException("Invalid day format for '" + date + "' Only numbers accepted");
 	}
 
 	std::time_t t = std::time(0);
 	std::tm* localTime = std::localtime(&t);
 	int currentYear = localTime->tm_year + 1900;
 
-	int actualYear = currentYear;
-	int year = std::atoi(date_["year"].c_str());
 	std::ostringstream oss;
-	oss << actualYear;
-	if (year < 2009 || year > actualYear)
-		throw WrongDateFormatException("Invalid year format for '" + date + "'the year should be between 2009 and " + oss.str());
+	oss << currentYear;
+	if (year < 2009 || year > currentYear)
+		throw WrongDateFormatException("Invalid year format for '" + date + "' the year should be between 2009 and " + oss.str());
 
+	std::ostringstream ss;
+	ss << month;
 
-	// if (year < 2009 && year > actualYear)
-	// 	throw WrongDateFormatException("The year should be between 2009 and " + oss.str());
-	// Range Checks for Year, Month, and Day:
-		// Month: Ensure the month is between 01 and 12.
-		// Day: Ensure the day is valid within the given
-		// month and year.
-
-	// Leap Year Check (for February):
-		// February (the 2nd month) can have 28 or 29 days
-			// depending on whether the year is a leap year.
-		// A year is a leap year if:
-			// It is divisible by 4.
-			// It is not divisible by 100,
-			// unless it is also divisible by 400.
-		// If the year is a leap year, February will have 29 days,
-			// otherwise, it will have 28 days.
-
-		// Validity of the Date (e.g., April 31 is invalid):
-			// Check for the validity of the day based on the month.
-				// For example:
-				// Months with 31 days: January, March, May, July,
-					// August, October, December
-				// Months with 30 days: April, June, September,
-					// November
-				// February has either 28 or 29 days
-					// (depending on the year).
+	if (month < 1 || month > 12)
+		throw WrongDateFormatException("Invalid month format for '" + date + "' there is only 12 month a year");
+	if (month == 4 || month == 6 || month == 9 || month == 11) {
+		if (day > 30 || day < 1)
+			throw WrongDateFormatException("Invalid day format for '" + date + "' month is 30 days");
+	}
+	else if (month != 2) {
+		if (day > 31 || day < 1)
+			throw WrongDateFormatException("Invalid day format for '" + date + "' month is 31 days");
+	}
+	else {
+		if (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)) {
+			if (day < 1 || day > 29)
+				throw WrongDateFormatException("Invalid day format for '" + date + "' February has 29 days in a leap year");
+		}
+		else if (day < 1 || day > 28)
+			throw WrongDateFormatException("Invalid day format for '" + date + "' February has 28 days in a common year");
+	}
 }
 
 BitcoinExchange::WrongDateFormatException::WrongDateFormatException(const std::string& msg) : message_(msg) {}
