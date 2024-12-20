@@ -5,7 +5,7 @@
 class BitcoinExchange {
 
 	private:
-		std::map<std::string, int> data_;
+		std::map<std::string, double> data_;
 		std::map<std::string, std::string> date_;
 
 	public:
@@ -17,6 +17,7 @@ class BitcoinExchange {
 		void initData(void);
 		void processData(std::string inputFile);
 		void parseDate(std::string date);
+		bool parseLine(std::string line);
 		class WrongDateFormatException : public std::exception {
 			private :
 				std::string message_;

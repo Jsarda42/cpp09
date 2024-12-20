@@ -36,7 +36,7 @@ void BitcoinExchange::initData(void) {
 						return;
 					}
 				}
-				priceValue = std::atol(value.c_str());
+				priceValue = std::atof(value.c_str());
 				if (priceValue < 0) {
 					std::cerr << "Wrong value: only non-negative value accepted'." << "\n";
 					return;
@@ -52,10 +52,71 @@ void BitcoinExchange::initData(void) {
 	}
 }
 
-void BitcoinExchange::processData(std::string inputFile) {(void)inputFile;
-	// for (std::map<std::string, double>::iterator it = data_.begin(); it != data_.end(); ++it) {
-    //     std::cout << it->first << std::endl;
-    // }
+bool BitcoinExchange::parseLine(std::string line) {
+	std::string date;
+	std::string value;
+	std::istringstream ss(line);
+	if (std::getline(ss, date, '|') && std::getline(ss, value)) {
+		if (date[date.size() - 1] == ' ') {
+			date = date.substr(0, date.size() - 1);
+		}
+		// check the maxint
+		if (value.size() > 10) {
+			std::cerr << "Error: too large a number" << "\n";
+			return false;
+		}
+		if (date.size() != 10 || date[4] != '-' || date[7] != '-') {
+			std::cerr << "Error: Invalid date format for '" << date << "'! Expected format: YYYY-MM-DD" << "\n";
+			return false;
+		}
+		if (value[0] == ' ') {
+			value = value.substr(1, value.size() - 1);
+		}
+		if (value.size() == 0) {
+			std::cerr << "Error: Invalid value format for '" << value << "'! Expected a number" << "\n";
+			return false;
+		}
+		double priceValue = std::atof(value.c_str());
+		if (priceValue < 0) {
+			std::cerr << "Error: not a positive number." << "\n";
+			return false;
+		}
+		parseDate(date);
+	}
+	else {
+		std::cerr << "Error: bad input => " << date  << "\n";
+		return false;
+	}
+	return true;
+}
+
+void BitcoinExchange::processData(std::string inputFile) {
+	std::string value;
+	std::string date;
+
+	std::ifstream file(inputFile);
+	if (!file.is_open()) {
+		std::cerr << "Error: Could not open input file " << inputFile << "\n";
+		return ;
+	}
+	std::string line;
+	std::getline(file, line);
+	if (line != "date | value") {
+		std::cerr << "Error: Wrong header format. Expected 'date | value'." << "\n";
+		return ;
+	}
+	while (std::getline(file, line)) {
+		if (parseLine(line)) {
+			std::istringstream ss(line);
+			std::getline(ss, date, '|') ;
+			std::getline(ss, value);
+			std::map<std::string, double>::iterator it = data_.upper_bound(date);
+			if (it != data_.begin()) {
+				--it;
+			}
+			std::cout << date << " => " << value << " = " << (it->second * std::atof(value.c_str())) << "\n";
+		}
+	}
 }
 
 void BitcoinExchange::parseDate(std::string date) {
